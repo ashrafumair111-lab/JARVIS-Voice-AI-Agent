@@ -1,0 +1,17 @@
+python-dotenv
+requests
+httpx
+psutil
+
+# Web page reading (fetch tool)
+trafilatura
+beautifulsoup4
+
+# LiveKit realtime voice stack (AgentSession, VAD, STT, TTS, LLM)
+livekit-agents
+livekit
+livekit-api
+livekit-plugins-deepgram
+livekit-plugins-cartesia
+livekit-plugins-silero
+livekit-plugins-openai

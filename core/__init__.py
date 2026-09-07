@@ -1,0 +1,1 @@
+"""Core package: audio I/O, brain, agent orchestration."""

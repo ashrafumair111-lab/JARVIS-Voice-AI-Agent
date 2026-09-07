@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JARVIS — Voice Agent</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: radial-gradient(1200px 600px at 20% -10%, #0b1d2e, #05080f 55%);
+    color: #d7e3ee;
+  }
+  .card {
+    width: min(560px, 92vw); padding: 28px 30px; border-radius: 20px;
+    background: rgba(10, 20, 32, .72); border: 1px solid rgba(64, 140, 220, .28);
+    box-shadow: 0 20px 60px rgba(0,0,0,.45);
+  }
+  h1 { margin: 0 0 4px; font-size: 30px; letter-spacing: 2px; }
+  .glow { color: #6ec3ff; text-shadow: 0 0 18px rgba(70, 140, 255, .6); }
+  p.sub { margin: 0 0 20px; color: #8ba3b8; }
+  label { display: block; margin: 14px 0 6px; font-size: 13px; letter-spacing: .6px; color: #9db4c7; }
+  input {
+    width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid #26465f;
+    background: #0a141d; color: #e6f1fa; font-size: 15px;
+  }
+  button {
+    width: 100%; margin-top: 20px; padding: 13px; border: 0; border-radius: 10px;
+    background: linear-gradient(90deg, #0e6fd0, #1aa5e0); color: #fff; font-size: 16px;
+    font-weight: 600; letter-spacing: .5px; cursor: pointer;
+  }
+  button:disabled { opacity: .45; cursor: wait; }
+  #status { margin-top: 16px; font-size: 14px; color: #9fd0f0; white-space: pre-wrap; min-height: 20px; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #ff5c5c; margin-right: 6px; }
+  .dot.on { background: #37e07c; box-shadow: 0 0 10px #37e07c; }
+  .dot.busy { background: #ffb340; box-shadow: 0 0 10px #ffb340; }
+  #meter {
+    margin-top: 14px; height: 8px; border-radius: 6px; background: #0d1a26;
+    border: 1px solid #1d3450; overflow: hidden;
+  }
+  #meter-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #1aa5e0, #37e07c);
+    transition: width .08s linear;
+  }
+  #log { margin-top: 10px; font-size: 12px; color: #6f8aa0; white-space: pre-wrap; height: 100px; overflow-y: auto; }
+  #transcript {
+    margin-top: 10px; font-size: 13px; color: #cfe3f2; height: 170px; overflow-y: auto;
+    background: #08131d; border: 1px solid #1d3450; border-radius: 10px; padding: 8px 10px;
+  }
+  #transcript b { color: #6ec3ff; }
+  #transcript .you b { color: #37e07c; }
+  #unmute, #testtone { width: auto; flex: 1; margin-top: 0; padding: 10px; font-size: 14px; }
+  #unmute { background: #e0453a; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1><span class="glow">JARVIS</span></h1>
+  <p class="sub">Realtime voice agent · connect, then just speak</p>
+
+  <label for="room">Room name</label>
+  <input id="room" value="jarvis">
+
+  <button id="connect">Connect &amp; Start Talking</button>
+  <div id="status"></div>
+  <div id="meter"><div id="meter-fill"></div></div>
+  <div style="display:flex; gap:10px; margin-top:12px">
+    <button id="unmute" style="display:none">🔇 Click to enable sound</button>
+    <button id="testtone">🔊 Test sound</button>
+  </div>
+  <div id="transcript"></div>
+  <div id="log"></div>
+</div>
+
+<!-- agent's voice plays here; must exist in DOM before connect -->
+<audio id="agent-audio" autoplay playsinline></audio>
+
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const roomInput = $("room"), btn = $("connect"), statusEl = $("status"), logEl = $("log");
+  const agentAudio = $("agent-audio"), meterFill = $("meter-fill");
+  const log = (m) => {
+    logEl.textContent += "[" + new Date().toLocaleTimeString() + "] " + m + "\n";
+    logEl.scrollTop = logEl.scrollHeight;
+  };
+  const setStatus = (html) => { statusEl.innerHTML = html; };
+  let currentRoom = null, meterRAF = 0;
+
+  function withTimeout(promise, ms, label) {
+    return Promise.race([
+      promise,
+      new Promise((_, rej) => setTimeout(() => rej(new Error(label + " timed out after " + (ms/1000) + "s")), ms))
+    ]);
+  }
+
+  async function getToken(room) {
+    const res = await fetch("/token?room=" + encodeURIComponent(room));
+    if (!res.ok) throw new Error("token request failed: HTTP " + res.status);
+    return await res.json();
+  }
+
+  function wireRoomEvents(room) {
+    room
+      .on(LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
+        if (track.kind === "audio") {
+          agentAudio.muted = false;
+          agentAudio.volume = 1;
+          track.attach(agentAudio);
+          agentAudio.play()
+            .then(() => { $("unmute").style.display = "none"; })
+            .catch(() => {
+              $("unmute").style.display = "inline-block";
+              log("browser blocked autoplay — click 'enable sound'");
+            });
+          log("JARVIS audio channel open (" + participant.identity + ")");
+        }
+      })
+      .on(LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
+        if (track.kind === "audio") { try { track.detach(agentAudio); } catch (_) {} }
+      })
+      .on(LivekitClient.RoomEvent.ParticipantConnected, (p) => log("participant joined: " + p.identity))
+      .on(LivekitClient.RoomEvent.ParticipantDisconnected, (p) => log("participant left: " + p.identity))
+      .on(LivekitClient.RoomEvent.Disconnected, (reason) => {
+        stopMeter();
+        setStatus('<span class="dot"></span>Disconnected.' + (reason ? " (" + reason + ")" : ""));
+        btn.textContent = "Connect & Start Talking";
+        btn.disabled = false;
+        currentRoom = null;
+      })
+      .on(LivekitClient.RoomEvent.LocalTrackPublished, (pub) =>
+        log("published: " + (pub.track && pub.track.kind)))
+      .on(LivekitClient.RoomEvent.LocalTrackUnpublished, (pub) =>
+        log("unpublished: " + pub.trackSid));
+  }
+
+  function startMeter(room) {
+    try {
+      const pub = room.localParticipant.getTrackPublication(LivekitClient.Track.Source.Microphone);
+      const mt = pub && pub.track && pub.track.mediaStreamTrack;
+      if (!mt) return;
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const src = ctx.createMediaStreamSource(new MediaStream([mt]));
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      src.connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const tick = () => {
+        analyser.getByteFrequencyData(data);
+        let sum = 0;
+        for (const v of data) sum += v;
+        meterFill.style.width = Math.min(100, (sum / data.length) * 1.8) + "%";
+        meterRAF = requestAnimationFrame(tick);
+      };
+      tick();
+    } catch (e) { log("meter unavailable: " + e.message); }
+  }
+
+  function stopMeter() {
+    cancelAnimationFrame(meterRAF);
+    meterFill.style.width = "0%";
+  }
+
+  function addLine(who, text) {
+    const d = document.createElement("div");
+    d.className = who === "You" ? "you" : "";
+    const b = document.createElement("b");
+    b.textContent = who + ": ";
+    d.appendChild(b);
+    d.appendChild(document.createTextNode(text));
+    transcriptEl.appendChild(d);
+    transcriptEl.scrollTop = transcriptEl.scrollHeight;
+  }
+  const transcriptEl = $("transcript");
+
+  $("unmute").addEventListener("click", () => {
+    agentAudio.play().then(() => { $("unmute").style.display = "none"; }).catch(() => {});
+  });
+
+  $("testtone").addEventListener("click", async () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      await ctx.resume();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = 660; g.gain.value = 0.25;
+      o.connect(g); g.connect(ctx.destination);
+      o.start();
+      setTimeout(() => { o.stop(); ctx.close(); }, 700);
+      log("test tone played — heard nothing? check Windows volume mixer for your browser + tab mute icon");
+    } catch (e) { log("tone failed: " + e.message); }
+  });
+</script>
+<script>
+  btn.addEventListener("click", async () => {
+    if (currentRoom) {
+      const r = currentRoom;
+      currentRoom = null;
+      btn.disabled = true;
+      try { await r.disconnect(); } catch (_) {}
+      return;
+    }
+
+    const name = (roomInput.value.trim() || "jarvis");
+    btn.disabled = true;
+    try {
+      setStatus('<span class="dot busy"></span>Requesting access token…');
+      const { token, url } = await withTimeout(getToken(name), 8000, "Token request");
+      log("token ok · " + url);
+
+      const room = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
+      wireRoomEvents(room);
+
+      // live captions: show everything JARVIS says + everything you say
+      try {
+        room.registerTextStreamHandler("lk.transcription", async (reader, info) => {
+          const text = await reader.readAll();
+          const who = (info.identity || "").indexOf("agent") === 0 ? "JARVIS" : "You";
+          addLine(who, text);
+        });
+      } catch (e) { log("transcript handler unavailable: " + e.message); }
+
+      setStatus('<span class="dot busy"></span>Connecting to LiveKit…');
+      await withTimeout(room.connect(url, token), 15000, "Connecting");
+      log("connected to room '" + room.name + "'");
+
+      setStatus('<span class="dot busy"></span>Waiting for microphone permission…<br>(check the browser prompt / 🔒 icon)');
+      // MIC ONLY — never request the camera; it hangs PCs without a free webcam
+      try {
+        await withTimeout(room.localParticipant.setMicrophoneEnabled(true), 20000, "Microphone permission");
+      } catch (micErr) {
+        const n = micErr && micErr.name;
+        if (n === "NotAllowedError" || /permission/i.test(micErr.message || "")) {
+          throw new Error("Microphone is BLOCKED. Click the lock/mic icon in the address bar → Site settings → allow Microphone, then press Connect again.");
+        }
+        if (n === "NotFoundError") throw new Error("No microphone found on this PC.");
+        throw micErr;
+      }
+      log("microphone published");
+
+      currentRoom = room;
+      startMeter(room);
+      setStatus('<span class="dot on"></span>🎤 Listening — speak anytime. JARVIS will answer out loud.');
+      btn.textContent = "Disconnect";
+      btn.disabled = false;
+    } catch (e) {
+      console.error(e);
+      stopMeter();
+      setStatus('<span class="dot"></span>' + e.message);
+      btn.textContent = "Connect & Start Talking";
+      btn.disabled = false;
+      if (currentRoom) { try { await currentRoom.disconnect(); } catch (_) {} currentRoom = null; }
+    }
+  });
+</script>
+</body>
+</html>

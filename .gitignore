@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Secrets - NEVER commit
+.env
+
+# Local logs & temp files
+*.log
+tmp/
+tts_probe.wav
+capture.wav
+reply.wav
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
