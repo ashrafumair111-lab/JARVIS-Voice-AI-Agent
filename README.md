@@ -1,87 +1,151 @@
-# JARVIS — Advanced Voice AI Agent
+<div align="center">
 
-A professional, Jarvis-style **realtime voice AI agent** for Windows that you talk to out loud in your browser.
+<img src="assets/jarvis-logo.svg" alt="JARVIS AI" width="640"/>
 
-**LiveKit realtime voice** — full-duplex, low-latency conversation over WebRTC (LiveKit Cloud) with **Silero VAD** turn detection, **Deepgram** speech-to-text, **Groq** LLM brain with tool calling, and **Cartesia** (heavy robot "Jarvis") text-to-speech.
+**A real-time, full-duplex AI voice assistant for your PC — talk to it, it talks back.**
 
-## Realtime stack (LiveKit)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![LiveKit](https://img.shields.io/badge/LiveKit-Cloud-00C2A8?logo=livekit&logoColor=white)](https://livekit.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-2f8fe0.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows11&logoColor=white)](https://github.com/)
 
-| Layer | Service | Role |
-|---|---|---|
-| Transport | LiveKit Cloud `wss://jarvis-fx99558r.livekit.cloud` | WebRTC audio in/out |
-| Turn detection | Silero VAD (`livekit-plugins-silero`) | Detects when you start/stop speaking, enables barge-in |
-| Ears (STT) | Deepgram `nova-3` | Speech → text |
-| Brain (LLM) | Groq `openai/gpt-oss-120b` (OpenAI-compatible) | Reasoning, planning, **live tool calling** |
-| Mouth (TTS) | Cartesia `sonic-3` — voice *Ronald (deep/intense)* | Text → heavy robot "Jarvis" voice |
-| Web search | Tavily | Online search + sourced answers |
-| Semantic memory | Cohere embeddings + Qdrant | Long-term recall of facts & notes |
-| Long-term store | MongoDB Atlas | Conversation history, command audit log |
+*Deepgram STT · Groq LLM · Cartesia TTS · Silero VAD — over WebRTC*
 
-## Features
+</div>
 
-- 🎙️ **Real-time voice chat** — speak, get interrupted, talk over the agent
-- 🧠 **Autonomous agent loop** — thinks, calls tools, acts, answers — all by voice
-- 💻 **Runs any command** — with a safety gate (destructive commands denied; sensitive ones ask for your verbal confirmation)
-- 🌐 **Real-time web search** (Tavily) + **full webpage reading**
-- 🧠 **Permanent semantic memory** (Qdrant + Cohere) — remembers facts across sessions
-- 🗄️ **MongoDB persistence** — transcripts & command audit logs
-- ⚙️ **System status** — CPU, RAM, disk, battery (psutil)
-- 🖥️ **Web frontend** — talk to JARVIS from a browser
+---
 
-## Quick Start
+## ✨ What is JARVIS?
 
-```powershell
-# 1. Install dependencies
+JARVIS is a **realtime voice agent** you run on your own machine. Open a web page, click one
+button, and just speak — no wake words, no push-to-talk. It hears you, thinks with an LLM,
+calls tools when needed, and answers in a deep "Jarvis-style" robotic voice, with full
+**barge-in** (interrupt it whenever you like).
+
+```
+ ┌──────────┐   WebRTC    ┌─────────────────────────────┐
+ │  Browser │◄═══════════►│      LiveKit Cloud          │
+ │  (mic +  │             │  room + audio transport     │
+ │ speaker) │             └──────────────┬──────────────┘
+ └──────────┘                            │ job dispatch
+                              ┌──────────▼───────────────┐
+                              │   JARVIS worker (local)  │
+                              │  ┌────────────────────┐  │
+                              │  │ Silero VAD (local) │──┼── turn detection & barge-in
+                              │  │ Deepgram  STT      │──┼── speech → text
+                              │  │ Groq      LLM      │──┼── reasoning + tool calls
+                              │  │ Cartesia  TTS      │──┼── text → Jarvis voice
+                              │  └────────────────────┘  │
+                              └───┬───────┬─────────┬────┘
+                                  │       │         │
+                             MongoDB    Qdrant +   Tavily
+                          (history &   Cohere     (web search)
+                           audit log)  (memory)
+```
+
+## 🚀 Features
+
+| | |
+|---|---|
+| 🎙️ **Realtime voice chat** | Full-duplex WebRTC audio — speak and get answers with sub-second latency |
+| ✋ **Barge-in & interruption** | Interrupt JARVIS mid-sentence just by talking (local Silero VAD, no cloud round-trip) |
+| 🧠 **LLM brain with tools** | Groq (`gpt-oss-120b`) plans and calls tools autonomously |
+| 💻 **PC control — with a safety gate** | Runs commands, opens apps, checks CPU/RAM/battery. Destructive commands are **denied**, risky ones **require verbal confirmation** |
+| 🌐 **Live web search** | Tavily search + full webpage reading & summarization |
+| 🧬 **Permanent semantic memory** | Remembers facts across sessions (Qdrant + Cohere embeddings) |
+| 🗄️ **Persistence** | Conversation history & command audit log in MongoDB Atlas |
+| 🖥️ **Browser UI** | One-click connect, live captions, mic level meter, sound check |
+
+## ⚡ Quick Start
+
+### Prerequisites
+- **Python 3.10+** on your PATH
+- API keys: [LiveKit](https://cloud.livekit.io/) · [Groq](https://console.groq.com/keys) · [Deepgram](https://console.deepgram.com/) · [Cartesia](https://play.cartesia.ai/keys) · [Tavily](https://tavily.com/) *(optional: Qdrant, Cohere, MongoDB)*
+
+### Install & run
+
+```bash
+# 1. Clone and enter the project
+git clone https://github.com/<your-username>/jarvis-ai.git
+cd jarvis-ai
+
+# 2. Install dependencies
 python -m pip install -r requirements.txt
 
-# 2. Copy .env.example to .env and fill in your API keys
-copy .env.example .env
+# 3. Create your .env
+cp .env.example .env        # Windows: copy .env.example .env
+#    → fill in your API keys
 
-# 3. Start the voice worker (terminal 1) - registers with LiveKit Cloud
+# 4. Terminal 1 — start the voice worker (the agent itself)
 python worker.py dev
+#    wait for:  registered worker
 
-# 4. Start the web frontend (terminal 2)
+# 5. Terminal 2 — start the web UI
 python frontend_server.py
 
-# 5. Open http://localhost:8000, click "Connect & Start Talking", and speak.
-#    (Silero VAD detects your speech; Cartesia talks back in the Jarvis voice.)
+# 6. Open http://localhost:8000 → Connect & Start Talking → just speak 🎙️
 ```
 
-> **Note:** The worker must be running before you connect — LiveKit Cloud
-> auto-dispatches it to any room a participant joins. If a connect seems to
-> hang with no agent, check the worker window for `JARVIS dispatched to room …`.
+## 💬 Things to say
 
-## Safety model
+- *"What time is it?"* — *"Check system status"*
+- *"Open notepad"* — *"Open chrome and go to github.com"*
+- *"Search online for today's AI news"* — *"Fetch and summarize https://…"*
+- *"Remember that my car plate is ABC-123"* → later: *"What is my car plate?"*
+- *"Run ipconfig"* — *"Run echo hello from jarvis"*
 
-- **DENY** (refused outright): destructive/system-damaging operations (`rm -rf`, disk format, registry nukes, etc.)
-- **CONFIRM** (asks you out loud): shutdown/restart, taskkill, file deletion, etc. — the agent verbally asks, then re-runs only if you agree.
-- Everything logged to MongoDB `command_log` for audit.
+## 🛡️ Safety model
 
-## What you can say
+Every command the LLM wants to run passes through a local gate in `config.py`:
 
-- "What time is it?" / "Check system status"
-- "Open notepad" / "Open chrome and go to github.com"
-- "Search online for today's AI news" / "Fetch and summarize https://…"
-- "Remember that my car plate is ABC-123" → later "What is my car plate?"
-- "Run `ipconfig`" / "Run `echo hello from jarvis`"
+| Level | Behaviour | Examples |
+|---|---|---|
+| ✅ **ALLOW** | runs instantly | `ipconfig`, `echo`, opening apps |
+| ⚠️ **CONFIRM** | JARVIS asks out loud; runs only after you agree | `shutdown`, `taskkill`, deleting files |
+| ⛔ **DENY** | refused outright | `format`, `diskpart`, `rm -rf`, registry wipes |
 
-## Environment (.env)
+All executed commands are written to a MongoDB `command_log` for auditing.
 
-`GROQ_API_KEY` / `GROQ_MODEL` · `TAVILY_API_KEY` · `COHERE_API_KEY` ·
-`QDRANT_URL` / `QDRANT_API_KEY` · `Mongodb_url` · `LIVEKIT_URL` / `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` ·
-`DEEPGRAM_API_KEY` / `DEEPGRAM_MODEL` · `CARTESIA_API_KEY` / `CARTESIA_MODEL` / `CARTESIA_VOICE` / `CARTESIA_EMOTION` / `CARTESIA_SPEED`
-
-## Project layout
+## 📁 Project structure
 
 ```
-start_worker.bat      one-click launcher: LiveKit worker
-start_frontend.bat    one-click launcher: web server (opens the browser)
-worker.py             LiveKit worker (AgentServer + rtc_session entrypoint)
-core/livekit_agent.py JarvisAgent + @function_tool tools (the realtime brain)
-tools/                system (run cmd, open apps), web (Tavily), memory (notes)
-memory/               MongoDB store + Qdrant/Cohere vector memory
-frontend/             browser voice client
-frontend_server.py    serves the page + issues join tokens
-get_token.py          manual token generator
-config.py             central config from .env
+jarvis-ai/
+├── worker.py               LiveKit worker — builds the voice pipeline & agent session
+├── frontend_server.py      Local web server: serves the UI + issues join tokens
+├── get_token.py            Standalone LiveKit token generator
+├── config.py               Central config — reads .env, safety patterns
+├── core/
+│   └── livekit_agent.py    JarvisAgent — system prompt + @function_tool definitions
+├── tools/
+│   ├── system_tools.py     run commands, open apps, system status (psutil)
+│   ├── web_tools.py        Tavily search + webpage reading
+│   └── memory_tools.py     save/recall semantic memories
+├── memory/
+│   ├── mongo_store.py      MongoDB history + command audit log
+│   └── vector_store.py     Qdrant + Cohere vector memory
+├── frontend/
+│   └── index.html          Browser client (LiveKit SDK, captions, mic meter)
+├── assets/
+│   └── jarvis-logo.svg     Project logo
+└── .env.example            All required environment variables, documented
 ```
+
+## 🔧 Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `Python was not found` | `python.exe` folder missing from PATH — add it, or disable the Microsoft Store alias (*Settings → Apps → Advanced app settings → App execution aliases*) |
+| `python worker.py dev` exits immediately | Re-check `LIVEKIT_URL / LIVEKIT_API_KEY / LIVEKIT_API_SECRET` in `.env` |
+| Page connects but no agent joins | The worker window must show `registered worker` **before** you connect |
+| You speak, agent stays silent | Wait for the green **Listening** state; pause ~0.6 s after speaking; click **🔊 Test sound** to verify browser output; check the Windows Volume Mixer for your browser |
+| Frequent reconnects | Unstable route to your LiveKit region — the worker auto-reconnects; pick a closer region in your LiveKit project |
+
+## 📜 License
+
+[MIT](LICENSE) © 2026 Ashraf Umair
+
+---
+
+<div align="center">
+<sub>Built with <a href="https://livekit.io/">LiveKit Agents</a> · <a href="https://groq.com/">Groq</a> · <a href="https://deepgram.com/">Deepgram</a> · <a href="https://cartesia.ai/">Cartesia</a> · <a href="https://github.com/snakers4/silero-vad">Silero VAD</a></sub>
+</div>
