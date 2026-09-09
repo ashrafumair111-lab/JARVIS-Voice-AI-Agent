@@ -7,7 +7,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent
-load_dotenv(BASE_DIR / ".env")
+# override=True so .env is the authoritative source, even if the same vars
+# are already exported in the OS/shell environment (e.g. an old GROQ_API_KEY
+# or GROQ_MODEL lingering in a conda activation script or profile).
+load_dotenv(BASE_DIR / ".env", override=True)
 
 # ----------------------------------------------------------------- Groq
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")

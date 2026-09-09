@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="640" height="200" viewBox="0 0 640 200" role="img" aria-label="JARVIS AI">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0b1626"/><stop offset="1" stop-color="#050a12"/>
+      <stop offset="0" stop-color="#0c1828"/><stop offset="1" stop-color="#04080f"/>
     </linearGradient>
     <linearGradient id="txt" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#8fdcff"/><stop offset="1" stop-color="#2f8fe0"/>
+      <stop offset="0" stop-color="#a5e6ff"/><stop offset="1" stop-color="#2f8fe0"/>
     </linearGradient>
     <radialGradient id="iris" cx="0.42" cy="0.38" r="0.75">
       <stop offset="0" stop-color="#eaffff"/>
@@ -22,6 +22,7 @@
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
+
   <rect width="640" height="200" rx="18" fill="url(#bg)" stroke="#1d3450" stroke-width="1.5"/>
 
   <!-- JARVIS 3D gyro-eye emblem -->

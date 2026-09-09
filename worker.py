@@ -28,7 +28,7 @@ def build_vad():
     """Silero VAD tuned for responsive, interruption-aware turn taking."""
     return silero.VAD.load(
         min_speech_duration=0.05,
-        min_silence_duration=0.55,
+        min_silence_duration=0.35,
         prefix_padding_duration=0.5,
         max_buffered_speech=60.0,
         activation_threshold=0.5,
@@ -91,8 +91,8 @@ async def entrypoint(ctx: agents.JobContext) -> None:
         # for turn detection + interruptions instead — fully offline decisions.
         turn_handling={
             "turn_detection": "vad",
-            "endpointing": {"mode": "fixed", "min_delay": 0.6, "max_delay": 2.0},
-            "interruption": {"enabled": True, "mode": "vad", "min_duration": 0.5},
+            "endpointing": {"mode": "fixed", "min_delay": 0.6, "max_delay": 0.8},
+            "interruption": {"enabled": True, "mode": "vad", "min_duration": 0.8},
             "preemptive_generation": {"enabled": False},
         },
     )
