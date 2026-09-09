@@ -4,10 +4,21 @@
 
 **A real-time, full-duplex AI voice assistant for your PC — talk to it, it talks back.**
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![LiveKit](https://img.shields.io/badge/LiveKit-Cloud-00C2A8?logo=livekit&logoColor=white)](https://livekit.io/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-2f8fe0.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows11&logoColor=white)](https://github.com/)
+<p align="center">
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python" height="22"/></a>
+  <a href="https://livekit.io/"><img src="https://img.shields.io/badge/LiveKit-Cloud-00C2A8?logo=livekit&logoColor=white" alt="LiveKit" height="22"/></a>
+  <a href="https://webrtc.org/"><img src="https://img.shields.io/badge/WebRTC-Realtime-333333?logo=webrtc&logoColor=white" alt="WebRTC" height="22"/></a>
+  <a href="https://deepgram.com/"><img src="https://img.shields.io/badge/Deepgram-STT-13EF93?logo=deepgram&logoColor=black" alt="Deepgram" height="22"/></a>
+  <a href="https://groq.com/"><img src="https://img.shields.io/badge/Groq-LLM-F55036?logo=groq&logoColor=white" alt="Groq" height="22"/></a>
+  <a href="https://cartesia.ai/"><img src="https://img.shields.io/badge/Cartesia-TTS-111111?logo=cartesia&logoColor=white" alt="Cartesia" height="22"/></a>
+  <a href="https://github.com/snakers4/silero-vad"><img src="https://img.shields.io/badge/Silero_VAD-Turn_Detection-8A2BE2" alt="Silero VAD" height="22"/></a>
+  <a href="https://tavily.com/"><img src="https://img.shields.io/badge/Tavily-Search-2B7BB9?logo=tavily&logoColor=white" alt="Tavily" height="22"/></a>
+  <a href="https://cohere.com/"><img src="https://img.shields.io/badge/Cohere-Embeddings-39594D?logo=cohere&logoColor=white" alt="Cohere" height="22"/></a>
+  <a href="https://qdrant.tech/"><img src="https://img.shields.io/badge/Qdrant-Memory-DC382D?logo=qdrant&logoColor=white" alt="Qdrant" height="22"/></a>
+  <a href="https://www.mongodb.com/"><img src="https://img.shields.io/badge/MongoDB-History-47A248?logo=mongodb&logoColor=white" alt="MongoDB" height="22"/></a>
+  <a href="https://www.microsoft.com/windows"><img src="https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows11&logoColor=white" alt="Windows" height="22"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2f8fe0.svg" alt="MIT License" height="22"/></a>
+</p>
 
 *Deepgram STT · Groq LLM · Cartesia TTS · Silero VAD — over WebRTC*
 
