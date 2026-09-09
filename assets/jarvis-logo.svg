@@ -1,27 +1,43 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="640" height="200" viewBox="0 0 640 200" role="img" aria-label="JARVIS AI">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0b1626"/><stop offset="1" stop-color="#050a12"/>
+      <stop offset="0" stop-color="#0c1828"/><stop offset="1" stop-color="#04080f"/>
     </linearGradient>
     <linearGradient id="txt" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#8fdcff"/><stop offset="1" stop-color="#2f8fe0"/>
+      <stop offset="0" stop-color="#a5e6ff"/><stop offset="1" stop-color="#2f8fe0"/>
     </linearGradient>
-    <radialGradient id="core" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#eaffff"/><stop offset="0.35" stop-color="#6fd4ff"/><stop offset="1" stop-color="#0a2c4a"/>
+    <radialGradient id="iris" cx="0.42" cy="0.38" r="0.8">
+      <stop offset="0" stop-color="#eafcff"/>
+      <stop offset="0.32" stop-color="#4bb8ff"/>
+      <stop offset="0.78" stop-color="#0a5c9e"/>
+      <stop offset="1" stop-color="#052338"/>
     </radialGradient>
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="6" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
+    <linearGradient id="sweep" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6fd4ff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#a5e6ff" stop-opacity="1"/>
+    </linearGradient>
   </defs>
+
   <rect width="640" height="200" rx="18" fill="url(#bg)" stroke="#1d3450" stroke-width="1.5"/>
-  <g transform="translate(105,100)" filter="url(#glow)">
-    <circle r="62" fill="none" stroke="#2f8fe0" stroke-opacity="0.35" stroke-width="2"/>
-    <circle r="50" fill="none" stroke="#3aa6ff" stroke-opacity="0.55" stroke-width="3" stroke-dasharray="30 12"/>
-    <circle r="36" fill="none" stroke="#6fd4ff" stroke-width="4" stroke-dasharray="8 6"/>
-    <circle r="22" fill="url(#core)"/>
-    <circle r="8" fill="#ffffff"/>
+
+  <!-- Rotating eye / iris -->
+  <g>
+    <!-- outer containment ring -->
+    <circle cx="105" cy="100" r="60" fill="none" stroke="#2f8fe0" stroke-opacity="0.28" stroke-width="1.5"/>
+    <!-- dashed orbit ring conveying rotation -->
+    <circle cx="105" cy="100" r="48" fill="none" stroke="#3aa6ff" stroke-opacity="0.5" stroke-width="2" stroke-dasharray="12 9"/>
+    <!-- radar-style rotating sweep arc -->
+    <path d="M 105 52 A 48 48 0 0 1 153 100" fill="none" stroke="url(#sweep)" stroke-width="6" stroke-linecap="round"/>
+    <!-- iris -->
+    <circle cx="105" cy="100" r="34" fill="url(#iris)"/>
+    <!-- pupil, offset toward the sweep to imply motion -->
+    <circle cx="113" cy="94" r="12" fill="#04121f"/>
+    <!-- specular highlight -->
+    <circle cx="96" cy="88" r="5" fill="#ffffff" fill-opacity="0.85"/>
+    <!-- orbiting dot at the sweep tip -->
+    <circle cx="153" cy="100" r="4" fill="#a5e6ff"/>
   </g>
+
   <g font-family="Segoe UI, Arial, sans-serif">
     <text x="205" y="100" font-size="62" font-weight="700" letter-spacing="13" fill="url(#txt)">JARVIS</text>
     <text x="209" y="136" font-size="18" letter-spacing="8" fill="#8fb6d2">AI VOICE ASSISTANT</text>
